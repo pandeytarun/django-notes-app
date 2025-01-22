@@ -1,43 +1,40 @@
-pipeline {
-    
-    agent { 
-        node{
-            label "dev"
-            
-        }
-    }
+@Library("shared") _
+pipeline{
+    agent{label "Vinod"}
     
     stages{
-        stage("Clone Code"){
+        
+        stage("hello"){
             steps{
-                git url: "https://github.com/LondheShubham153/django-notes-app.git", branch: "main"
-                echo "Aaj toh LinkedIn Post bannta hai boss"
+                script{
+                    hello()
+                }
             }
         }
-        stage("Build & Test"){
+        stage("code"){
             steps{
-                sh "docker build . -t notes-app-jenkins:latest"
+                script{
+                 clone("https://github.com/pandeytarun/django-notes-app.git" ,"main")    
+                }
+            }
+        }
+        stage("Build"){
+            steps{
+                script{
+                    docker_build("notesapp","latest","tarunpandey")
+                }
             }
         }
         stage("Push to DockerHub"){
             steps{
-                withCredentials(
-                    [usernamePassword(
-                        credentialsId:"dockerCreds",
-                        passwordVariable:"dockerHubPass", 
-                        usernameVariable:"dockerHubUser"
-                        )
-                    ]
-                ){
-                sh "docker image tag notes-app-jenkins:latest ${env.dockerHubUser}/notes-app-jenkins:latest"
-                sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                sh "docker push ${env.dockerHubUser}/notes-app-jenkins:latest"
+                script{
+                    docker_push("notesapp","latest","tarunpandey")
                 }
             }
         }
-        
         stage("Deploy"){
             steps{
+                echo "this is Deploying the code"
                 sh "docker compose up -d"
             }
         }
